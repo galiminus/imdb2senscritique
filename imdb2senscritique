@@ -14,15 +14,16 @@ cookies = resp.cookies
 
 RestClient.get imdb_rating do |csv_body|
   CSV.parse(csv_body)[1..-1].each do |row|
-    query = "#{row[5]} #{row[7]} #{row[11]}"
-    rating = row[8]
-    url = "#{ROOT}/recherche?query=#{CGI.escape(query)}&filter=movies"
+    title, author, year, rating = row[5], row[7], row[11], row[8]
+    url = "#{ROOT}/recherche?query=#{CGI.escape(title)}&filter=movies"
 
-    puts "Rate #{row[5]} => #{row[8]} (#{url})"
+    puts "Rate #{title} => #{rating} (#{url})"
 
     RestClient.get url do |result|
-      li = Nokogiri::HTML(result).css(".elsea-li").first
-      id = li['data-sc-product-id']
+      id = Nokogiri::HTML(result).css(".elsea-li").select{ |li|
+        li.css(".ellp-original-title").text == title &&
+        li.css(".elprlc-a").attr('title').to_s == author
+      }.first['data-sc-product-id']
       RestClient.post "#{ROOT}/collections/rate/#{id}.json", {rating: rating}, {cookies: cookies}
     end
     sleep 5
