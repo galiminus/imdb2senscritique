@@ -9,14 +9,15 @@ imdb_rating, email, password = ARGV
 
 ROOT="http://www.senscritique.com"
 
+resp = RestClient.post "#{ROOT}/auth/login.json", {email: email, pass: password}
+cookies = resp.cookies
+
 RestClient.get imdb_rating do |csv_body|
   CSV.parse(csv_body)[1..-1].each do |row|
     query = "#{row[5]} #{row[7]} #{row[11]}"
     rating = row[8]
     url = "#{ROOT}/recherche?query=#{CGI.escape(query)}&filter=movies"
 
-    resp = RestClient.post "#{ROOT}/auth/login.json", {email: email, pass: password}
-    cookies = resp.cookies
     puts "Rate #{row[5]} => #{row[8]} (#{url})"
 
     RestClient.get url do |result|
