@@ -6,4 +6,6 @@ ruby imdb2senscritique <imdb rating csv> <senscritique email> <senscritique pass
 
 The IMDB rating CSV can be found in your rating page, search for the
 "Export this link" link. For example, mine is here
-    "http://www.imdb.com/list/export?list_id=ratings&author_id=ur20978082".
+`http://www.imdb.com/list/export?list_id=ratings&author_id=ur20978082`.
+
+The rating page should be made public.
