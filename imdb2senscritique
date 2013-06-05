@@ -27,7 +27,7 @@ RestClient.get imdb_rating do |csv_body|
     RestClient.get url do |result|
       movie_node = Nokogiri::HTML(result).css(".elsea-li").find do |li|
         author_node = li.css(".elprlc-a")
-        author_node ? author_node.attr('title').to_s == author : false
+        author_node ? simplify(author_node.attr('title').to_s) == simplify(author) : false
       end
 
       if movie_node
