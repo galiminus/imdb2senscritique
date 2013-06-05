@@ -5,6 +5,10 @@ require 'csv'
 require 'cgi'
 require 'nokogiri'
 
+def simplify(string)
+  string.downcase.strip.gsub(' ', '-').gsub(/[^\w-]/, '')
+end
+
 imdb_rating, email, password = ARGV
 
 ROOT="http://www.senscritique.com"
@@ -15,16 +19,20 @@ cookies = resp.cookies
 RestClient.get imdb_rating do |csv_body|
   CSV.parse(csv_body)[1..-1].each do |row|
     title, author, year, rating = row[5], row[7], row[11], row[8]
-    url = "#{ROOT}/recherche?query=#{CGI.escape(title)}&filter=movies"
+    query = "#{title} #{author} #{year}"
+    url = "#{ROOT}/recherche?query=#{CGI.escape(query)}&filter=movies"
 
-    puts "Rate #{title} => #{rating} (#{url})"
+    puts "#{title} => #{rating} (#{url})"
 
     RestClient.get url do |result|
-      id = Nokogiri::HTML(result).css(".elsea-li").select{ |li|
-        li.css(".ellp-original-title").text == title &&
-        li.css(".elprlc-a").attr('title').to_s == author
-      }.first['data-sc-product-id']
-      RestClient.post "#{ROOT}/collections/rate/#{id}.json", {rating: rating}, {cookies: cookies}
+      movie_node = Nokogiri::HTML(result).css(".elsea-li").find do |li|
+        author_node = li.css(".elprlc-a")
+        author_node ? author_node.attr('title').to_s == author : false
+      end
+
+      if movie_node
+        RestClient.post "#{ROOT}/collections/rate/#{movie_node['data-sc-product-id']}.json", {rating: rating}, {cookies: cookies}
+      end
     end
     sleep 5
   end
