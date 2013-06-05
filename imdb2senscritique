@@ -25,13 +25,21 @@ RestClient.get imdb_rating do |csv_body|
     puts "#{title} => #{rating} (#{url})"
 
     RestClient.get url do |result|
-      movie_node = Nokogiri::HTML(result).css(".elsea-li").find do |li|
-        author_node = li.css(".elprlc-a")
-        author_node ? simplify(author_node.attr('title').to_s) == simplify(author) : false
-      end
+      begin
+        movie_node = Nokogiri::HTML(result).css(".elsea-li").find do |li|
+          begin
+            author_node = li.css(".elprlc-a")
+            simplify(author_node.attr('title').to_s) == simplify(author)
+          rescue
+            false
+          end
+        end
 
-      if movie_node
-        RestClient.post "#{ROOT}/collections/rate/#{movie_node['data-sc-product-id']}.json", {rating: rating}, {cookies: cookies}
+        if movie_node
+          RestClient.post "#{ROOT}/collections/rate/#{movie_node['data-sc-product-id']}.json", {rating: rating}, {cookies: cookies}
+        end
+      rescue => e
+        puts e
       end
     end
     sleep 5
